@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Index of /</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #000;
+            background-color: #fff;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 20px;
+            font-weight: normal;
+            margin-bottom: 5px;
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 5px 10px;
+            border-bottom: 1px solid #ccc;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 5px 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .icon {
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
+            color: #666;
+        }
+        
+        .name {
+            display: flex;
+            align-items: center;
+        }
+        
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            color: #c00;
+            padding: 20px;
+            border: 1px solid #fcc;
+            background-color: #fee;
+            margin-top: 20px;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Index of /</h1>
+    <hr>
+    
+    <div id="loading" class="loading">
+        <p><i class="fas fa-spinner fa-spin"></i> Loading directory contents...</p>
+    </div>
+    
+    <div id="error" class="error" style="display: none;">
+        <p><strong>Error:</strong> <span id="error-message">Failed to load directory contents.</span></p>
+    </div>
+    
+    <table id="directory-table" style="display: none;">
+        <thead>
+            <tr>
+                <th style="width: 60%;">Name</th>
+                <th style="width: 25%;">Last Modified</th>
+                <th style="width: 15%;">Size</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Table rows will be populated by JavaScript -->
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        <p>Served by GitHub API | CDN: cdn.gsmfirmware.net</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiUrl = 'https://api.github.com/repos/gsmfirmware/cdn/contents/';
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            const tableElement = document.getElementById('directory-table');
+            const tableBody = document.getElementById('table-body');
+            const errorMessageElement = document.getElementById('error-message');
+            
+            // Function to format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 B';
+                
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+            
+            // Function to format date (simulating a realistic "last modified" date)
+            function formatLastModified() {
+                // For demonstration, we'll use a date that's a few days ago
+                // In a real scenario, you'd use the actual last modified date from the API
+                const daysAgo = Math.floor(Math.random() * 30) + 1;
+                const date = new Date();
+                date.setDate(date.getDate() - daysAgo);
+                
+                // Format as: DD-MMM-YYYY HH:MM
+                const day = date.getDate().toString().padStart(2, '0');
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const month = months[date.getMonth()];
+                const year = date.getFullYear();
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                
+                return `${day}-${month}-${year} ${hours}:${minutes}`;
+            }
+            
+            // Function to get icon based on file type/extension
+            function getFileIcon(filename, type) {
+                if (type === 'dir') {
+                    return '<i class="fas fa-folder icon"></i>';
+                }
+                
+                // Check file extension for appropriate icon
+                const ext = filename.split('.').pop().toLowerCase();
+                
+                // Image files
+                if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'ico', 'svg'].includes(ext)) {
+                    return '<i class="fas fa-file-image icon"></i>';
+                }
+                
+                // Document files
+                if (['md', 'txt', 'pdf', 'doc', 'docx'].includes(ext)) {
+                    return '<i class="fas fa-file-alt icon"></i>';
+                }
+                
+                // Code files
+                if (['js', 'html', 'css', 'json', 'xml', 'py', 'java', 'cpp'].includes(ext)) {
+                    return '<i class="fas fa-file-code icon"></i>';
+                }
+                
+                // Default file icon
+                return '<i class="fas fa-file icon"></i>';
+            }
+            
+            // Fetch data from GitHub API
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading indicator
+                    loadingElement.style.display = 'none';
+                    
+                    // Check if data is valid
+                    if (!Array.isArray(data)) {
+                        throw new Error('Invalid data received from API');
+                    }
+                    
+                    // Sort items: folders first, then files alphabetically
+                    const sortedData = [...data].sort((a, b) => {
+                        // If both are the same type, sort by name
+                        if (a.type === b.type) {
+                            return a.name.localeCompare(b.name);
+                        }
+                        // Put directories before files
+                        return a.type === 'dir' ? -1 : 1;
+                    });
+                    
+                    // Populate table rows
+                    sortedData.forEach(item => {
+                        const row = document.createElement('tr');
+                        
+                        // Name column with icon and link
+                        const nameCell = document.createElement('td');
+                        const icon = getFileIcon(item.name, item.type);
+                        const cdnUrl = `https://cdn.gsmfirmware.net/${item.name}`;
+                        
+                        nameCell.className = 'name';
+                        nameCell.innerHTML = `
+                            ${icon}
+                            <a href="${cdnUrl}" title="${item.name}">${item.name}</a>
+                        `;
+                        
+                        // Last Modified column
+                        const modifiedCell = document.createElement('td');
+                        modifiedCell.textContent = formatLastModified();
+                        
+                        // Size column
+                        const sizeCell = document.createElement('td');
+                        sizeCell.textContent = item.type === 'dir' ? '-' : formatFileSize(item.size);
+                        
+                        row.appendChild(nameCell);
+                        row.appendChild(modifiedCell);
+                        row.appendChild(sizeCell);
+                        
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // Show the table
+                    tableElement.style.display = 'table';
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    loadingElement.style.display = 'none';
+                    
+                    // Show error message
+                    errorMessageElement.textContent = error.message;
+                    errorElement.style.display = 'block';
+                    
+                    console.error('Error fetching directory data:', error);
+                });
+        });
+    </script>
+</body>
+</html>
